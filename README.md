@@ -1,10 +1,21 @@
 # Orbit — Flutter News Reader
 
-A space news reader for the supplied Flutter Developer Assessment. Production data comes from the Spaceflight News API, never bundled article fixtures. The only mocked production feature is authentication, as allowed by the assessment.
+Orbit is a Flutter space-news reader built with Clean Architecture and MVVM presentation. It combines a live news feed, keyword search, offline bookmarks, and persistent theme preferences with an animated galaxy sign-in experience.
+
+News data comes from the Spaceflight News API. Authentication is a local demo flow for the Flutter Developer Assessment; it does not verify credentials against a backend.
+
+## Highlights
+
+- Animated galaxy login background with nebula glows, twinkling stars, and orbital accents.
+- Responsive sign-in overlay with aligned labels, readable fields, password visibility, and loading/error feedback.
+- Live space-news feed with infinite scrolling, pull-to-refresh, and debounced search.
+- Saved article summaries and best-effort downloaded thumbnails for offline reading.
+- Persistent light, dark, and system theme preferences.
+- Riverpod state management, repository abstractions, and Hive persistence.
 
 ## Start here
 
-1. Install the **latest stable Flutter SDK** from https://docs.flutter.dev/install and configure Android Studio / Android SDK. These dependencies require **Dart 3.13 or newer**. Use `flutter channel stable`, `flutter upgrade`, and `flutter doctor` on your development machine.
+1. Install the [Flutter SDK](https://docs.flutter.dev/install) and configure Android Studio / Android SDK. Use a stable Flutter release whose bundled Dart SDK satisfies the constraints in `pubspec.yaml`. Run `flutter --version` and `flutter doctor` to check your environment.
 2. Extract this project and open a terminal in `orbit_news`.
 3. Run the setup below. Python 3 is required only for the cross-platform setup script.
 
@@ -17,7 +28,7 @@ flutter run
 
 On Windows, use `python` if `python3` is unavailable. The bootstrap script creates the standard Android/iOS platform folders using your installed Flutter SDK, grants Android internet permission, sets Android minSdk to at least 24, downloads pub dependencies, generates Freezed/JSON files, and formats source. It does not overwrite the application code. Once platform folders exist, it preserves them. Run this as normal project setup; no API key or source edits are required.
 
-This source package was authored without a preinstalled Flutter or Android SDK. Read `VALIDATION.md` for the exact checks performed and remaining checks. Do not submit an unverified build to the assessor.
+Read `VALIDATION.md` for the recorded checks and remaining verification steps. Run the analysis, tests, and device checks below in your Flutter environment before submission. This README update does not certify a successful build or test run.
 
 ## API
 
@@ -75,11 +86,27 @@ There is one meaningful news use case. Simple settings and bookmark commands cal
 
 ### Authentication
 
-Use any valid email address and an 8–72 character nonblank password. Email is trimmed and lowercased. Password is not trimmed or stored, logged, or sent to a server. There is no real credential verification. With Remember enabled, the email is restored after restart. Without Remember, the current in-memory session lasts until process termination. Logout clears the remembered identity and the route guard returns to login. The email acts as the local bookmark namespace; this is demo separation, not secure multi-user authentication.
+Use any valid email address and an 8–72 character nonblank password. Email is trimmed and lowercased. Password is not trimmed or stored, logged, or sent to a server. There is no real credential verification.
+
+With Remember enabled, the email is restored after restart. Without Remember, the current in-memory session lasts until process termination. Logout clears the remembered identity and the route guard returns to login.
+
+The email acts as the local bookmark namespace; this is demo separation, not secure multi-user authentication.
+
+### Login screen
+
+The sign-in screen keeps the animated galaxy background behind a centered foreground layout. The background combines a theme-aware gradient, radial nebula glows, twinkling stars, and animated orbital paths. The foreground uses a brand header, a translucent form surface, consistent field spacing, and a separate demo notice.
+
+The form includes email and password validation, password visibility, Remember selection, keyboard focus progression, and submission from the password field. While signing in, fields and controls are disabled and duplicate submissions are ignored. Authentication errors appear within the form and are announced through a live semantic region.
+
+A scrollable layout handles compact screens and the keyboard, while a maximum content width keeps the form readable on larger displays. The galaxy controller stops when reduced motion is enabled or its ticker is disabled and is disposed with the screen.
 
 ### News and search
 
-Infinite scrolling requests another page near the bottom. The fallback load-more button also works with keyboard or large screens. Pull-to-refresh refreshes the current query. Initial loading, refresh, page loading, API failure, page failure, empty results, and end-of-list have explicit UI. Existing articles remain visible when refresh or pagination fails. Retry repeats the failed offset. Search resets pagination; generation tokens ignore stale responses. Already-started API requests may finish, but cannot overwrite newer state. No automatic retry loop is used for API failures or rate limits.
+Infinite scrolling requests another page near the bottom. The fallback load-more button also works with keyboard or large screens. Pull-to-refresh refreshes the current query.
+
+Initial loading, refresh, page loading, API failure, page failure, empty results, and end-of-list have explicit UI. Existing articles remain visible when refresh or pagination fails. Retry repeats the failed offset.
+
+Search resets pagination; generation tokens ignore stale responses. Already-started API requests may finish, but cannot overwrite newer state. No automatic retry loop is used for API failures or rate limits.
 
 ### Offline support
 
@@ -93,11 +120,38 @@ Infinite scrolling requests another page near the bottom. The fallback load-more
 
 ### Theme and UI
 
-Light, dark, and system themes persist. Central colors, strings, font sizes, spacing, and animation durations are in `core/constants`. All authored interface text is centralized; external article content comes from the API. `AppText`, `AppButton`, `OrbitLoader`, `StatePanel`, `ResponsiveBody`, and article widgets are reusable. Theme text styles remain available to standard Material controls.
+Light, dark, and system themes persist. App-wide theme transitions use the duration and curve configured on `MaterialApp.router`; the settings theme selector provides animated selection feedback.
 
-The loader is a stationary sparkle/news-brand icon with a rotating painted orbital arc and dot. It is used for page loads, pagination, images, buttons, and startup. Pull-to-refresh uses the spinner-free Material refresh control and the same orbit loader. Fade and slide entrance animations respect the system reduce-motion setting. Layout uses one, two, or three article columns, a mobile navigation bar, and a tablet navigation rail. Variable-height rows and scrolling forms support larger text.
+Central colors, strings, font sizes, spacing, and animation durations are in `core/constants`. Shared interface strings are maintained in `AppStrings`; external article content comes from the API. The current login layout also contains the inline heading `WELCOME TO ORBIT`.
 
-**Fonts:** Local Manrope Regular, Medium, SemiBold, Bold, and ExtraBold TTF files are included in `assets/fonts/`. They were instanced from the official Google Fonts Manrope variable font. The original variable font and SIL Open Font License are included. There is no runtime font download. Source: https://github.com/google/fonts/tree/main/ofl/manrope
+`AppText`, `AppButton`, `OrbitLoader`, `StatePanel`, `ResponsiveBody`, and article widgets are reusable. Theme text styles remain available to standard Material controls.
+
+The loader is a stationary sparkle/news-brand icon with a rotating painted orbital arc and dot. It is used for page loads, pagination, images, buttons, and startup. Pull-to-refresh uses the spinner-free Material refresh control and the same orbit loader.
+
+Fade and slide entrance animations respect the system reduce-motion setting. Layout uses one, two, or three article columns, a mobile navigation bar, and a tablet navigation rail. Variable-height rows and scrolling forms support larger text.
+
+**Fonts:** Local Manrope Regular, Medium, SemiBold, Bold, and ExtraBold TTF files are included in `assets/fonts/`. They were instanced from the official Google Fonts Manrope variable font. The original variable font and SIL Open Font License are included. There is no runtime font download.
+
+Source: https://github.com/google/fonts/tree/main/ofl/manrope
+
+## Project organization
+
+| Location | Responsibility |
+|---|---|
+| `lib/app/providers.dart` | Composition root and repository/provider wiring |
+| `lib/core/constants/` | Shared colors, strings, typography, spacing, and durations |
+| `lib/core/extensions/` | Shared context helpers, including reduced-motion access |
+| `lib/core/utils/` | Input validation and shared utilities |
+| `lib/features/auth/presentation/login_screen.dart` | Login form, foreground layout, and galaxy background widgets/painter |
+| `lib/features/auth/presentation/auth_view_model.dart` | Authentication state and sign-in/session actions |
+| `lib/widgets/` | Reusable controls, loaders, and entrance animations |
+| `assets/fonts/` | Bundled Manrope font assets and license |
+| `test/` | Unit and widget checks |
+| `integration_test/` | Device flow and screenshot tests |
+| `scripts/bootstrap.py` | Initial platform setup and generation workflow |
+| `docs/` | Architecture reading order and assessment mapping |
+
+See `docs/BUILD_ORDER.md` for the complete project tree.
 
 ## Packages
 
@@ -137,15 +191,23 @@ flutter drive --driver=test_driver/integration_test.dart --target=integration_te
 # Output: screenshots/*.png
 ```
 
-The default Flutter Android release template generally uses debug signing until a release key is configured. That can be installed for assessment review, but store distribution requires your own signing configuration. iOS builds require macOS/Xcode and signing; use `flutter build ios --no-codesign` for a local unsigned compile check. Platforms generated by the current Flutter template determine the supported iOS minimum; keep it at least iOS 13 for url_launcher.
+The default Flutter Android release template generally uses debug signing until a release key is configured. That can be installed for assessment review, but store distribution requires your own signing configuration.
 
-Test coverage includes email/password validation, REST field/query mapping, invalid schema, HTTP 429/timeout mapping, stale-search isolation, debounce, pagination single-flight/deduplication/retry cursor, Hive reopen persistence, per-email bookmarks, removal, remembered/logout behavior, theme restoration, exact-query offline fallback, and cache-write failure. A compact-screen widget test covers validation under large text. Test fixture responses exist only under tests; production calls the REST endpoint.
+iOS builds require macOS/Xcode and signing; use `flutter build ios --no-codesign` for a local unsigned compile check. Platforms generated by the current Flutter template determine the supported iOS minimum; keep it at least iOS 13 for url_launcher.
 
-The included CI workflow bootstraps the project, runs host checks, builds an APK, and runs an Android emulator screenshot job. Screenshot fixtures deliberately avoid depending on real-time API results. They are not substitutes for final live-news submission screenshots. Capture live Discover, search, Saved offline, article, and dark-mode screens on your device before submission.
+Test coverage includes email/password validation, REST field/query mapping, invalid schema, HTTP 429/timeout mapping, stale-search isolation, debounce, pagination single-flight/deduplication/retry cursor, Hive reopen persistence, per-email bookmarks, removal, remembered/logout behavior, theme restoration, exact-query offline fallback, and cache-write failure.
+
+A compact-screen widget test covers validation under large text. Test fixture responses exist only under tests; production calls the REST endpoint.
+
+The included CI workflow bootstraps the project, runs host checks, builds an APK, and runs an Android emulator screenshot job. Screenshot fixtures deliberately avoid depending on real-time API results. They are not substitutes for final live-news submission screenshots.
+
+Capture live Discover, search, Saved offline, article, and dark-mode screens on your device before submission.
 
 ## Repository and deliverables
 
-The source archive does not represent a GitHub-hosted repository. Create a repository in your account and commit the implementation honestly; do not manufacture a past development timeline. Keep source, generated DTO/state files, platform folders, and `pubspec.lock` after bootstrap in the repository. Exclude build output and signing secrets.
+The source archive does not represent a GitHub-hosted repository. Create a repository in your account and commit the implementation honestly; do not manufacture a past development timeline.
+
+Keep source, generated DTO/state files, platform folders, and `pubspec.lock` after bootstrap in the repository. Exclude build output and signing secrets.
 
 Before submission:
 
@@ -153,7 +215,10 @@ Before submission:
 - Run analyze, tests, Android release build, and the device flow.
 - Test the actual API on your network and real publisher images.
 - Verify offline saved summaries after killing/restarting the process in airplane mode.
-- Capture actual app screenshots and attach the built APK.
+- Check login alignment with the keyboard open, large text, validation errors, and both themes.
+- Check reduced motion, password visibility, Remember, logout, and busy-state behavior.
+- Verify theme changes and persisted selection after restarting the app.
+- Capture actual app screenshots, including the updated galaxy login screen, and attach the built APK.
 - Supply the Git repository URL and README.
 
 See `docs/BUILD_ORDER.md` for the complete folder structure and file-by-file reading order. See `docs/REQUIREMENTS.md` for the assessment mapping.
