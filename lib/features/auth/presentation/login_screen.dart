@@ -2,13 +2,12 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:orbit_news/widgets/app_button.dart';
-import 'package:orbit_news/widgets/app_text.dart';
-import 'package:orbit_news/widgets/fade_in.dart';
 
 import '../../../core/constants/app_strings.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../../core/utils/validators.dart';
+import '../../../widgets/app_button.dart';
+import '../../../widgets/fade_in.dart';
 import 'auth_view_model.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -21,11 +20,15 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen>
     with SingleTickerProviderStateMixin {
   final _form = GlobalKey<FormState>();
+
   final _email = TextEditingController();
   final _password = TextEditingController();
 
-  final _remember = ValueNotifier<bool>(true);
-  final _obscure = ValueNotifier<bool>(true);
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
+
+  bool _remember = true;
+  bool _obscure = true;
 
   late final AnimationController _animation;
 
@@ -43,7 +46,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    if (context.reduceMotion) {
+    if (context.reduceMotion || !TickerMode.of(context)) {
       _animation.stop();
     } else if (!_animation.isAnimating) {
       _animation.repeat();
@@ -54,11 +57,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     if (ref.read(authProvider).busy) return;
     if (!(_form.currentState?.validate() ?? false)) return;
 
-    FocusScope.of(context).unfocus();
+    FocusManager.instance.primaryFocus?.unfocus();
 
-    ref
-        .read(authProvider.notifier)
-        .signIn(_email.text, _password.text, remember: _remember.value);
+    ref.read(authProvider.notifier).signIn(
+      _email.text.trim(),
+      _password.text,
+      remember: _remember,
+    );
   }
 
   @override
@@ -66,328 +71,434 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     _animation.dispose();
     _email.dispose();
     _password.dispose();
-    _remember.dispose();
-    _obscure.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
 
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(authProvider);
-    final colors = context.colors;
+    final auth = ref.watch(authProvider);
+    final colors = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      backgroundColor: colors.surface,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: IgnorePointer(
-              child: ExcludeSemantics(
-                child: _GalaxyBackground(animation: _animation),
+    return PopScope(
+      canPop: !auth.busy,
+      child: Scaffold(
+        backgroundColor: colors.surface,
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: IgnorePointer(
+                child: ExcludeSemantics(
+                  child: _GalaxyBackground(
+                    animation: _animation,
+                  ),
+                ),
               ),
             ),
-          ),
-          SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final keyboardOpen =
-                    MediaQuery.viewInsetsOf(context).bottom > 0;
+            SafeArea(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final compact = constraints.maxHeight < 680;
+                  final verticalPadding = compact ? 16.0 : 28.0;
 
-                final compact = constraints.maxHeight < 650 || keyboardOpen;
-
-                final verticalPadding = compact ? 16.0 : 24.0;
-
-                return SingleChildScrollView(
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: verticalPadding,
-                  ),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: math.max(
-                        0.0,
-                        constraints.maxHeight - verticalPadding * 2,
-                      ),
+                  return SingleChildScrollView(
+                    keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: verticalPadding,
                     ),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 420),
-                        child: FadeIn(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 48,
-                                    height: 48,
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                        colors: [
-                                          colors.primary,
-                                          Color.lerp(
-                                            colors.primary,
-                                            colors.tertiary,
-                                            0.6,
-                                          )!,
-                                        ],
-                                      ),
-                                      borderRadius: BorderRadius.circular(16),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: colors.primary.withValues(
-                                            alpha: 0.25,
-                                          ),
-                                          blurRadius: 20,
-                                          offset: const Offset(0, 6),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Icon(
-                                      Icons.newspaper_rounded,
-                                      color: colors.onPrimary,
-                                      size: 25,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  const Expanded(
-                                    child: AppText(
-                                      AppStrings.appName,
-                                      variant: AppTextStyle.heading,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: compact ? 24 : 36),
-                              Container(
-                                width: 32,
-                                height: 3,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [colors.primary, colors.tertiary],
-                                  ),
-                                  borderRadius: BorderRadius.circular(10),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: math.max(
+                          0.0,
+                          constraints.maxHeight - verticalPadding * 2,
+                        ),
+                      ),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            maxWidth: 440,
+                          ),
+                          child: FadeIn(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment:
+                              CrossAxisAlignment.stretch,
+                              children: [
+                                _buildBrand(context),
+                                SizedBox(
+                                  height: compact ? 22 : 30,
                                 ),
-                              ),
-                              const SizedBox(height: 14),
-                              Text(
-                                AppStrings.welcome,
-                                style: context.textTheme.headlineMedium
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: -0.8,
-                                    ),
-                              ),
-                              const SizedBox(height: 8),
-                              const AppText(
-                                AppStrings.loginSubtitle,
-                                variant: AppTextStyle.small,
-                              ),
-                              SizedBox(height: compact ? 20 : 28),
-                              AutofillGroup(
-                                child: Form(
-                                  key: _form,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      TextFormField(
-                                        controller: _email,
-                                        enabled: !state.busy,
-                                        validator: Validators.email,
-                                        keyboardType:
-                                            TextInputType.emailAddress,
-                                        textInputAction: TextInputAction.next,
-                                        autofillHints: const [
-                                          AutofillHints.email,
-                                        ],
-                                        autocorrect: false,
-                                        decoration: _inputDecoration(
-                                          context,
-                                          label: AppStrings.email,
-                                          hint: AppStrings.emailHint,
-                                          icon: Icons.alternate_email_rounded,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 16),
-                                      ValueListenableBuilder<bool>(
-                                        valueListenable: _obscure,
-                                        builder: (context, obscure, child) {
-                                          return TextFormField(
-                                            controller: _password,
-                                            enabled: !state.busy,
-                                            validator: Validators.password,
-                                            obscureText: obscure,
-                                            textInputAction:
-                                                TextInputAction.done,
-                                            onFieldSubmitted: (_) => _submit(),
-                                            autofillHints: const [
-                                              AutofillHints.password,
-                                            ],
-                                            enableSuggestions: false,
-                                            autocorrect: false,
-                                            maxLength: 72,
-                                            decoration:
-                                                _inputDecoration(
-                                                  context,
-                                                  label: AppStrings.password,
-                                                  hint: AppStrings.passwordHint,
-                                                  icon: Icons
-                                                      .lock_outline_rounded,
-                                                ).copyWith(
-                                                  counterText: '',
-                                                  suffixIcon: IconButton(
-                                                    tooltip: obscure
-                                                        ? AppStrings
-                                                              .showPassword
-                                                        : AppStrings
-                                                              .hidePassword,
-                                                    onPressed: state.busy
-                                                        ? null
-                                                        : () {
-                                                            _obscure.value =
-                                                                !obscure;
-                                                          },
-                                                    icon: Icon(
-                                                      obscure
-                                                          ? Icons
-                                                                .visibility_outlined
-                                                          : Icons
-                                                                .visibility_off_outlined,
-                                                      size: 21,
-                                                    ),
-                                                  ),
-                                                ),
-                                          );
-                                        },
-                                      ),
-                                      const SizedBox(height: 4),
-                                      ValueListenableBuilder<bool>(
-                                        valueListenable: _remember,
-                                        builder: (context, remember, child) {
-                                          return CheckboxListTile(
-                                            value: remember,
-                                            contentPadding: EdgeInsets.zero,
-                                            controlAffinity:
-                                                ListTileControlAffinity.leading,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                            title: const AppText(
-                                              AppStrings.remember,
-                                              variant: AppTextStyle.small,
-                                            ),
-                                            onChanged: state.busy
-                                                ? null
-                                                : (value) {
-                                                    _remember.value =
-                                                        value ?? false;
-                                                  },
-                                          );
-                                        },
-                                      ),
-                                      if (state.error != null)
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            bottom: 12,
-                                          ),
-                                          child: Semantics(
-                                            liveRegion: true,
-                                            child: AppText(
-                                              state.error!,
-                                              variant: AppTextStyle.small,
-                                              color: colors.error,
-                                            ),
-                                          ),
-                                        ),
-                                      const SizedBox(height: 8),
-                                      AppButton(
-                                        label: AppStrings.signIn,
-                                        icon: Icons.arrow_forward_rounded,
-                                        busy: state.busy,
-                                        onPressed: _submit,
-                                      ),
-                                    ],
+                                _buildFormCard(context, auth),
+                                const SizedBox(height: 16),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  child: Text(
+                                    AppStrings.demoNotice,
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(height: 1.6),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(height: 20),
-                              const AppText(
-                                AppStrings.demoNotice,
-                                variant: AppTextStyle.caption,
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBrand(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Row(
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: colors.primary,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: colors.onPrimary.withValues(alpha: 0.12),
             ),
           ),
+          child: Icon(
+            Icons.auto_awesome_rounded,
+            size: 22,
+            color: colors.onPrimary,
+          ),
+        ),
+        const SizedBox(width: 11),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                AppStrings.appName,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                AppStrings.tagline,
+                style: theme.textTheme.labelSmall,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFormCard(BuildContext context, AuthState auth) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final dark = theme.brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: colors.surface.withValues(
+          alpha: dark ? 0.92 : 0.94,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: colors.primary.withValues(
+            alpha: dark ? 0.25 : 0.16,
+          ),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow.withValues(
+              alpha: dark ? 0.12 : 0.04,
+            ),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
         ],
+      ),
+      child: AutofillGroup(
+        child: Form(
+          key: _form,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'WELCOME TO ORBIT',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: colors.primary,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.4,
+                ),
+              ),
+              const SizedBox(height: 9),
+              Text(
+                AppStrings.welcome,
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  height: 1.2,
+                  letterSpacing: -0.7,
+                ),
+              ),
+              const SizedBox(height: 9),
+              Text(
+                AppStrings.loginSubtitle,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  height: 1.6,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Divider(
+                height: 1,
+                color: colors.outlineVariant.withValues(alpha: 0.45),
+              ),
+              const SizedBox(height: 20),
+
+              _fieldLabel(context, AppStrings.email),
+              const SizedBox(height: 7),
+              TextFormField(
+                controller: _email,
+                focusNode: _emailFocus,
+                enabled: !auth.busy,
+                validator: Validators.email,
+                keyboardType: TextInputType.emailAddress,
+                textCapitalization: TextCapitalization.none,
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.email],
+                autocorrect: false,
+                enableSuggestions: false,
+                style: theme.textTheme.bodyLarge,
+                onFieldSubmitted: (_) {
+                  _passwordFocus.requestFocus();
+                },
+                onTapOutside: (_) {
+                  _emailFocus.unfocus();
+                },
+                decoration: _inputDecoration(
+                  context,
+                  hint: AppStrings.emailHint,
+                  icon: Icons.alternate_email_rounded,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              _fieldLabel(context, AppStrings.password),
+              const SizedBox(height: 7),
+              TextFormField(
+                controller: _password,
+                focusNode: _passwordFocus,
+                enabled: !auth.busy,
+                validator: Validators.password,
+                obscureText: _obscure,
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.password],
+                enableSuggestions: false,
+                autocorrect: false,
+                maxLength: 72,
+                style: theme.textTheme.bodyLarge,
+                onFieldSubmitted: (_) => _submit(),
+                onTapOutside: (_) {
+                  _passwordFocus.unfocus();
+                },
+                decoration: _inputDecoration(
+                  context,
+                  hint: AppStrings.passwordHint,
+                  icon: Icons.lock_outline_rounded,
+                ).copyWith(
+                  counterText: '',
+                  suffixIcon: IconButton(
+                    tooltip: _obscure
+                        ? AppStrings.showPassword
+                        : AppStrings.hidePassword,
+                    onPressed: auth.busy
+                        ? null
+                        : () {
+                      setState(() {
+                        _obscure = !_obscure;
+                      });
+                    },
+                    icon: Icon(
+                      _obscure
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      size: 19,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 5),
+
+              CheckboxListTile(
+                value: _remember,
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                controlAffinity: ListTileControlAffinity.leading,
+                title: Text(
+                  AppStrings.remember,
+                  style: theme.textTheme.bodyMedium,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                onChanged: auth.busy
+                    ? null
+                    : (value) {
+                  setState(() {
+                    _remember = value ?? false;
+                  });
+                },
+              ),
+
+              AnimatedSize(
+                duration: context.reduceMotion
+                    ? Duration.zero
+                    : const Duration(milliseconds: 180),
+                alignment: Alignment.topLeft,
+                child: auth.error == null
+                    ? const SizedBox(width: double.infinity)
+                    : Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Semantics(
+                    liveRegion: true,
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: colors.error.withValues(
+                          alpha: 0.06,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: colors.error.withValues(
+                            alpha: 0.16,
+                          ),
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment:
+                        CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.info_outline_rounded,
+                            size: 16,
+                            color: colors.error,
+                          ),
+                          const SizedBox(width: 7),
+                          Expanded(
+                            child: Text(
+                              auth.error!,
+                              style:
+                              theme.textTheme.bodySmall?.copyWith(
+                                color: colors.error,
+                                height: 1.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 6),
+              AppButton(
+                label: AppStrings.signIn,
+                icon: Icons.arrow_forward_rounded,
+                busy: auth.busy,
+                onPressed: _submit,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _fieldLabel(BuildContext context, String text) {
+    return Text(
+      text,
+      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+        fontWeight: FontWeight.w600,
       ),
     );
   }
 
   InputDecoration _inputDecoration(
-    BuildContext context, {
-    required String label,
-    required String hint,
-    required IconData icon,
-  }) {
-    final colors = context.colors;
-    final radius = BorderRadius.circular(16);
+      BuildContext context, {
+        required String hint,
+        required IconData icon,
+      }) {
+    final colors = Theme.of(context).colorScheme;
+
+    final border = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(13),
+      borderSide: BorderSide(
+        color: colors.outlineVariant.withValues(alpha: 0.65),
+      ),
+    );
 
     return InputDecoration(
-      labelText: label,
       hintText: hint,
-      prefixIcon: Icon(icon, size: 21),
+      prefixIcon: Icon(
+        icon,
+        size: 18,
+        color: colors.onSurfaceVariant,
+      ),
       filled: true,
-      fillColor: Color.alphaBlend(
-        colors.primary.withValues(alpha: 0.035),
-        colors.surface,
+      fillColor: colors.surfaceContainerLow,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: 14,
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      border: OutlineInputBorder(borderRadius: radius),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: radius,
+      border: border,
+      enabledBorder: border,
+      disabledBorder: border.copyWith(
         borderSide: BorderSide(
-          color: colors.outlineVariant.withValues(alpha: 0.7),
+          color: colors.outlineVariant.withValues(alpha: 0.3),
         ),
       ),
-      disabledBorder: OutlineInputBorder(
-        borderRadius: radius,
+      focusedBorder: border.copyWith(
         borderSide: BorderSide(
-          color: colors.outlineVariant.withValues(alpha: 0.35),
+          color: colors.primary,
+          width: 1.3,
         ),
       ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: radius,
-        borderSide: BorderSide(color: colors.primary, width: 1.5),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: radius,
+      errorBorder: border.copyWith(
         borderSide: BorderSide(color: colors.error),
       ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: radius,
-        borderSide: BorderSide(color: colors.error, width: 1.5),
+      focusedErrorBorder: border.copyWith(
+        borderSide: BorderSide(
+          color: colors.error,
+          width: 1.3,
+        ),
       ),
     );
   }
 }
 
 class _GalaxyBackground extends StatelessWidget {
-  const _GalaxyBackground({required this.animation});
+  const _GalaxyBackground({
+    required this.animation,
+  });
 
   final Animation<double> animation;
 
@@ -407,21 +518,25 @@ class _GalaxyBackground extends StatelessWidget {
                 end: Alignment.bottomRight,
                 colors: dark
                     ? [
-                        const Color(0xFF090D1C),
-                        colors.surface,
-                        const Color(0xFF151027),
-                      ]
+                  const Color(0xFF090D1C),
+                  colors.surface,
+                  const Color(0xFF151027),
+                ]
                     : [
-                        Color.alphaBlend(
-                          const Color(0xFF818CF8).withValues(alpha: 0.08),
-                          colors.surface,
-                        ),
-                        colors.surface,
-                        Color.alphaBlend(
-                          const Color(0xFFA78BFA).withValues(alpha: 0.08),
-                          colors.surface,
-                        ),
-                      ],
+                  Color.alphaBlend(
+                    const Color(0xFF818CF8).withValues(
+                      alpha: 0.08,
+                    ),
+                    colors.surface,
+                  ),
+                  colors.surface,
+                  Color.alphaBlend(
+                    const Color(0xFFA78BFA).withValues(
+                      alpha: 0.08,
+                    ),
+                    colors.surface,
+                  ),
+                ],
               ),
             ),
           ),
@@ -459,7 +574,9 @@ class _GalaxyBackground extends StatelessWidget {
                 starColor: dark
                     ? const Color(0xFFE0E7FF)
                     : const Color(0xFF6366A0),
-                orbitColor: dark ? const Color(0xFFA5B4FC) : colors.primary,
+                orbitColor: dark
+                    ? const Color(0xFFA5B4FC)
+                    : colors.primary,
                 dark: dark,
               ),
             ),
@@ -515,11 +632,18 @@ class _GalaxyPainter extends CustomPainter {
   final Color orbitColor;
   final bool dark;
 
-  static final List<Offset> _stars = List.generate(100, (index) {
-    final random = math.Random(index * 97 + 11);
+  static final List<Offset> _stars = List.generate(
+    100,
+        (index) {
+      final random = math.Random(index * 97 + 11);
 
-    return Offset(random.nextDouble(), random.nextDouble());
-  }, growable: false);
+      return Offset(
+        random.nextDouble(),
+        random.nextDouble(),
+      );
+    },
+    growable: false,
+  );
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -531,43 +655,58 @@ class _GalaxyPainter extends CustomPainter {
     final phase = animation.value * math.pi * 2;
     final paint = Paint();
 
-    for (var i = 0; i < _stars.length; i++) {
-      final star = _stars[i];
+    for (var index = 0; index < _stars.length; index++) {
+      final star = _stars[index];
 
       final position = Offset(
         star.dx * size.width,
-        star.dy * size.height + math.sin(phase + i * 0.7) * 2,
+        star.dy * size.height +
+            math.sin(phase + index * 0.7) * 2,
       );
 
-      final twinkle = 0.5 + 0.5 * math.sin(phase * 2 + i * 1.7);
+      final twinkle =
+          0.5 + 0.5 * math.sin(phase * 2 + index * 1.7);
 
-      final behindForm =
-          star.dx > 0.12 && star.dx < 0.88 && star.dy > 0.22 && star.dy < 0.80;
+      final behindForm = star.dx > 0.12 &&
+          star.dx < 0.88 &&
+          star.dy > 0.22 &&
+          star.dy < 0.80;
 
       final visibility = behindForm ? 0.18 : 1.0;
 
-      final opacity = (dark ? 0.20 : 0.12) + twinkle * (dark ? 0.50 : 0.25);
+      final opacity = (dark ? 0.20 : 0.12) +
+          twinkle * (dark ? 0.50 : 0.25);
 
-      final radius = i % 9 == 0
+      final radius = index % 9 == 0
           ? 1.7
-          : i % 3 == 0
+          : index % 3 == 0
           ? 1.1
           : 0.7;
 
       paint
         ..style = PaintingStyle.fill
-        ..color = starColor.withValues(alpha: opacity * visibility);
+        ..color = starColor.withValues(
+          alpha: opacity * visibility,
+        );
 
       canvas.drawCircle(position, radius, paint);
 
-      if (i % 13 == 0 && !behindForm) {
-        _drawSparkle(canvas, position, radius * 3, opacity * 0.6);
+      if (index % 13 == 0 && !behindForm) {
+        _drawSparkle(
+          canvas,
+          position,
+          radius * 3,
+          opacity * 0.6,
+        );
       }
     }
 
     _drawOrbit(
       canvas,
-      center: Offset(size.width * 0.90, size.height * 0.10),
+      center: Offset(
+        size.width * 0.90,
+        size.height * 0.10,
+      ),
       radiusX: size.width * 0.36,
       radiusY: size.width * 0.14,
       rotation: -0.45,
@@ -576,7 +715,10 @@ class _GalaxyPainter extends CustomPainter {
 
     _drawOrbit(
       canvas,
-      center: Offset(size.width * 0.08, size.height * 0.93),
+      center: Offset(
+        size.width * 0.08,
+        size.height * 0.93,
+      ),
       radiusX: size.width * 0.40,
       radiusY: size.width * 0.16,
       rotation: -0.40,
@@ -587,11 +729,11 @@ class _GalaxyPainter extends CustomPainter {
   }
 
   void _drawSparkle(
-    Canvas canvas,
-    Offset center,
-    double radius,
-    double opacity,
-  ) {
+      Canvas canvas,
+      Offset center,
+      double radius,
+      double opacity,
+      ) {
     final paint = Paint()
       ..color = starColor.withValues(alpha: opacity)
       ..strokeWidth = 0.8
@@ -611,13 +753,13 @@ class _GalaxyPainter extends CustomPainter {
   }
 
   void _drawOrbit(
-    Canvas canvas, {
-    required Offset center,
-    required double radiusX,
-    required double radiusY,
-    required double rotation,
-    required double phase,
-  }) {
+      Canvas canvas, {
+        required Offset center,
+        required double radiusX,
+        required double radiusY,
+        required double rotation,
+        required double phase,
+      }) {
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.rotate(rotation);
@@ -631,7 +773,9 @@ class _GalaxyPainter extends CustomPainter {
     canvas.drawOval(
       orbit,
       Paint()
-        ..color = orbitColor.withValues(alpha: dark ? 0.14 : 0.09)
+        ..color = orbitColor.withValues(
+          alpha: dark ? 0.14 : 0.09,
+        )
         ..style = PaintingStyle.stroke
         ..strokeWidth = 0.8,
     );
@@ -642,13 +786,18 @@ class _GalaxyPainter extends CustomPainter {
       0.55,
       false,
       Paint()
-        ..color = orbitColor.withValues(alpha: dark ? 0.35 : 0.20)
+        ..color = orbitColor.withValues(
+          alpha: dark ? 0.35 : 0.20,
+        )
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.2
         ..strokeCap = StrokeCap.round,
     );
 
-    final planet = Offset(math.cos(phase) * radiusX, math.sin(phase) * radiusY);
+    final planet = Offset(
+      math.cos(phase) * radiusX,
+      math.sin(phase) * radiusY,
+    );
 
     canvas.drawCircle(
       planet,
@@ -656,16 +805,26 @@ class _GalaxyPainter extends CustomPainter {
       Paint()
         ..shader = RadialGradient(
           colors: [
-            orbitColor.withValues(alpha: dark ? 0.35 : 0.20),
+            orbitColor.withValues(
+              alpha: dark ? 0.35 : 0.20,
+            ),
             orbitColor.withValues(alpha: 0),
           ],
-        ).createShader(Rect.fromCircle(center: planet, radius: 9)),
+        ).createShader(
+          Rect.fromCircle(
+            center: planet,
+            radius: 9,
+          ),
+        ),
     );
 
     canvas.drawCircle(
       planet,
       2.5,
-      Paint()..color = orbitColor.withValues(alpha: dark ? 0.9 : 0.65),
+      Paint()
+        ..color = orbitColor.withValues(
+          alpha: dark ? 0.9 : 0.65,
+        ),
     );
 
     canvas.restore();
