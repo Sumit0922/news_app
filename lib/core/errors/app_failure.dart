@@ -1,4 +1,6 @@
 enum FailureKind {
+  configuration,
+  unauthorized,
   network,
   timeout,
   invalidResponse,
@@ -10,7 +12,9 @@ enum FailureKind {
 
 class AppFailure implements Exception {
   const AppFailure(this.kind);
+
   final FailureKind kind;
+
   @override
   String toString() => 'AppFailure($kind)';
 }

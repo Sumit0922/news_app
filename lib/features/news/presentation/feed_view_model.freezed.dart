@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$FeedState {
 
- List<Article> get articles; String get query; bool get loading; bool get refreshing; bool get loadingMore; bool get hasMore; bool get offline; bool get cacheWriteFailed; String? get error; String? get pageError;
+ List<Article> get articles; String get query; NewsCategory get category; bool get loading; bool get refreshing; bool get loadingMore; bool get hasMore; bool get offline; bool get cacheWriteFailed; String? get error; String? get pageError;
 /// Create a copy of FeedState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $FeedStateCopyWith<FeedState> get copyWith => _$FeedStateCopyWithImpl<FeedState>
 @override
 bool operator ==(Object other) {
   final _this = this as FeedState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is FeedState&&const DeepCollectionEquality().equals(other.articles, _this.articles)&&(identical(other.query, _this.query) || other.query == _this.query)&&(identical(other.loading, _this.loading) || other.loading == _this.loading)&&(identical(other.refreshing, _this.refreshing) || other.refreshing == _this.refreshing)&&(identical(other.loadingMore, _this.loadingMore) || other.loadingMore == _this.loadingMore)&&(identical(other.hasMore, _this.hasMore) || other.hasMore == _this.hasMore)&&(identical(other.offline, _this.offline) || other.offline == _this.offline)&&(identical(other.cacheWriteFailed, _this.cacheWriteFailed) || other.cacheWriteFailed == _this.cacheWriteFailed)&&(identical(other.error, _this.error) || other.error == _this.error)&&(identical(other.pageError, _this.pageError) || other.pageError == _this.pageError));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is FeedState&&const DeepCollectionEquality().equals(other.articles, _this.articles)&&(identical(other.query, _this.query) || other.query == _this.query)&&(identical(other.category, _this.category) || other.category == _this.category)&&(identical(other.loading, _this.loading) || other.loading == _this.loading)&&(identical(other.refreshing, _this.refreshing) || other.refreshing == _this.refreshing)&&(identical(other.loadingMore, _this.loadingMore) || other.loadingMore == _this.loadingMore)&&(identical(other.hasMore, _this.hasMore) || other.hasMore == _this.hasMore)&&(identical(other.offline, _this.offline) || other.offline == _this.offline)&&(identical(other.cacheWriteFailed, _this.cacheWriteFailed) || other.cacheWriteFailed == _this.cacheWriteFailed)&&(identical(other.error, _this.error) || other.error == _this.error)&&(identical(other.pageError, _this.pageError) || other.pageError == _this.pageError));
 }
 
 
 @override
 int get hashCode {
   final _this = this as FeedState;
-  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.articles),_this.query,_this.loading,_this.refreshing,_this.loadingMore,_this.hasMore,_this.offline,_this.cacheWriteFailed,_this.error,_this.pageError);
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.articles),_this.query,_this.category,_this.loading,_this.refreshing,_this.loadingMore,_this.hasMore,_this.offline,_this.cacheWriteFailed,_this.error,_this.pageError);
 }
 
 @override
 String toString() {
   final _this = this as FeedState;
-  return 'FeedState(articles: ${_this.articles}, query: ${_this.query}, loading: ${_this.loading}, refreshing: ${_this.refreshing}, loadingMore: ${_this.loadingMore}, hasMore: ${_this.hasMore}, offline: ${_this.offline}, cacheWriteFailed: ${_this.cacheWriteFailed}, error: ${_this.error}, pageError: ${_this.pageError})';
+  return 'FeedState(articles: ${_this.articles}, query: ${_this.query}, category: ${_this.category}, loading: ${_this.loading}, refreshing: ${_this.refreshing}, loadingMore: ${_this.loadingMore}, hasMore: ${_this.hasMore}, offline: ${_this.offline}, cacheWriteFailed: ${_this.cacheWriteFailed}, error: ${_this.error}, pageError: ${_this.pageError})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $FeedStateCopyWith<$Res>  {
   factory $FeedStateCopyWith(FeedState value, $Res Function(FeedState) _then) = _$FeedStateCopyWithImpl;
 @useResult
 $Res call({
- List<Article> articles, String query, bool loading, bool refreshing, bool loadingMore, bool hasMore, bool offline, bool cacheWriteFailed, String? error, String? pageError
+ List<Article> articles, String query, NewsCategory category, bool loading, bool refreshing, bool loadingMore, bool hasMore, bool offline, bool cacheWriteFailed, String? error, String? pageError
 });
 
 
@@ -68,11 +68,12 @@ class _$FeedStateCopyWithImpl<$Res>
 
 /// Create a copy of FeedState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? articles = null,Object? query = null,Object? loading = null,Object? refreshing = null,Object? loadingMore = null,Object? hasMore = null,Object? offline = null,Object? cacheWriteFailed = null,Object? error = freezed,Object? pageError = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? articles = null,Object? query = null,Object? category = null,Object? loading = null,Object? refreshing = null,Object? loadingMore = null,Object? hasMore = null,Object? offline = null,Object? cacheWriteFailed = null,Object? error = freezed,Object? pageError = freezed,}) {
   return _then(FeedState(
 articles: null == articles ? _self.articles : articles // ignore: cast_nullable_to_non_nullable
 as List<Article>,query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
-as String,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
+as String,category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
+as NewsCategory,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
 as bool,refreshing: null == refreshing ? _self.refreshing : refreshing // ignore: cast_nullable_to_non_nullable
 as bool,loadingMore: null == loadingMore ? _self.loadingMore : loadingMore // ignore: cast_nullable_to_non_nullable
 as bool,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable
@@ -165,10 +166,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<Article> articles,  String query,  bool loading,  bool refreshing,  bool loadingMore,  bool hasMore,  bool offline,  bool cacheWriteFailed,  String? error,  String? pageError)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<Article> articles,  String query,  NewsCategory category,  bool loading,  bool refreshing,  bool loadingMore,  bool hasMore,  bool offline,  bool cacheWriteFailed,  String? error,  String? pageError)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _FeedState() when $default != null:
-return $default(_that.articles,_that.query,_that.loading,_that.refreshing,_that.loadingMore,_that.hasMore,_that.offline,_that.cacheWriteFailed,_that.error,_that.pageError);case _:
+return $default(_that.articles,_that.query,_that.category,_that.loading,_that.refreshing,_that.loadingMore,_that.hasMore,_that.offline,_that.cacheWriteFailed,_that.error,_that.pageError);case _:
   return orElse();
 
 }
@@ -186,10 +187,10 @@ return $default(_that.articles,_that.query,_that.loading,_that.refreshing,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<Article> articles,  String query,  bool loading,  bool refreshing,  bool loadingMore,  bool hasMore,  bool offline,  bool cacheWriteFailed,  String? error,  String? pageError)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<Article> articles,  String query,  NewsCategory category,  bool loading,  bool refreshing,  bool loadingMore,  bool hasMore,  bool offline,  bool cacheWriteFailed,  String? error,  String? pageError)  $default,) {final _that = this;
 switch (_that) {
 case _FeedState():
-return $default(_that.articles,_that.query,_that.loading,_that.refreshing,_that.loadingMore,_that.hasMore,_that.offline,_that.cacheWriteFailed,_that.error,_that.pageError);case _:
+return $default(_that.articles,_that.query,_that.category,_that.loading,_that.refreshing,_that.loadingMore,_that.hasMore,_that.offline,_that.cacheWriteFailed,_that.error,_that.pageError);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -206,10 +207,10 @@ return $default(_that.articles,_that.query,_that.loading,_that.refreshing,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<Article> articles,  String query,  bool loading,  bool refreshing,  bool loadingMore,  bool hasMore,  bool offline,  bool cacheWriteFailed,  String? error,  String? pageError)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<Article> articles,  String query,  NewsCategory category,  bool loading,  bool refreshing,  bool loadingMore,  bool hasMore,  bool offline,  bool cacheWriteFailed,  String? error,  String? pageError)?  $default,) {final _that = this;
 switch (_that) {
 case _FeedState() when $default != null:
-return $default(_that.articles,_that.query,_that.loading,_that.refreshing,_that.loadingMore,_that.hasMore,_that.offline,_that.cacheWriteFailed,_that.error,_that.pageError);case _:
+return $default(_that.articles,_that.query,_that.category,_that.loading,_that.refreshing,_that.loadingMore,_that.hasMore,_that.offline,_that.cacheWriteFailed,_that.error,_that.pageError);case _:
   return null;
 
 }
@@ -221,7 +222,7 @@ return $default(_that.articles,_that.query,_that.loading,_that.refreshing,_that.
 
 
 class _FeedState implements FeedState {
-  const _FeedState({ List<Article> articles = const <Article>[], this.query = '', this.loading = true, this.refreshing = false, this.loadingMore = false, this.hasMore = false, this.offline = false, this.cacheWriteFailed = false, this.error, this.pageError}): _articles = articles;
+  const _FeedState({ List<Article> articles = const <Article>[], this.query = '', this.category = NewsCategory.business, this.loading = true, this.refreshing = false, this.loadingMore = false, this.hasMore = false, this.offline = false, this.cacheWriteFailed = false, this.error, this.pageError}): _articles = articles;
   
 
  final  List<Article> _articles;
@@ -232,6 +233,7 @@ class _FeedState implements FeedState {
 }
 
 @override@JsonKey() final  String query;
+@override@JsonKey() final  NewsCategory category;
 @override@JsonKey() final  bool loading;
 @override@JsonKey() final  bool refreshing;
 @override@JsonKey() final  bool loadingMore;
@@ -251,18 +253,18 @@ _$FeedStateCopyWith<_FeedState> get copyWith => __$FeedStateCopyWithImpl<_FeedSt
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _FeedState&&const DeepCollectionEquality().equals(other.articles, _articles)&&(identical(other.query, query) || other.query == query)&&(identical(other.loading, loading) || other.loading == loading)&&(identical(other.refreshing, refreshing) || other.refreshing == refreshing)&&(identical(other.loadingMore, loadingMore) || other.loadingMore == loadingMore)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.offline, offline) || other.offline == offline)&&(identical(other.cacheWriteFailed, cacheWriteFailed) || other.cacheWriteFailed == cacheWriteFailed)&&(identical(other.error, error) || other.error == error)&&(identical(other.pageError, pageError) || other.pageError == pageError));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _FeedState&&const DeepCollectionEquality().equals(other.articles, _articles)&&(identical(other.query, query) || other.query == query)&&(identical(other.category, category) || other.category == category)&&(identical(other.loading, loading) || other.loading == loading)&&(identical(other.refreshing, refreshing) || other.refreshing == refreshing)&&(identical(other.loadingMore, loadingMore) || other.loadingMore == loadingMore)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.offline, offline) || other.offline == offline)&&(identical(other.cacheWriteFailed, cacheWriteFailed) || other.cacheWriteFailed == cacheWriteFailed)&&(identical(other.error, error) || other.error == error)&&(identical(other.pageError, pageError) || other.pageError == pageError));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_articles),query,loading,refreshing,loadingMore,hasMore,offline,cacheWriteFailed,error,pageError);
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_articles),query,category,loading,refreshing,loadingMore,hasMore,offline,cacheWriteFailed,error,pageError);
 }
 
 @override
 String toString() {
-    return 'FeedState(articles: $articles, query: $query, loading: $loading, refreshing: $refreshing, loadingMore: $loadingMore, hasMore: $hasMore, offline: $offline, cacheWriteFailed: $cacheWriteFailed, error: $error, pageError: $pageError)';
+    return 'FeedState(articles: $articles, query: $query, category: $category, loading: $loading, refreshing: $refreshing, loadingMore: $loadingMore, hasMore: $hasMore, offline: $offline, cacheWriteFailed: $cacheWriteFailed, error: $error, pageError: $pageError)';
 }
 
 
@@ -273,7 +275,7 @@ abstract mixin class _$FeedStateCopyWith<$Res> implements $FeedStateCopyWith<$Re
   factory _$FeedStateCopyWith(_FeedState value, $Res Function(_FeedState) _then) = __$FeedStateCopyWithImpl;
 @override @useResult
 $Res call({
- List<Article> articles, String query, bool loading, bool refreshing, bool loadingMore, bool hasMore, bool offline, bool cacheWriteFailed, String? error, String? pageError
+ List<Article> articles, String query, NewsCategory category, bool loading, bool refreshing, bool loadingMore, bool hasMore, bool offline, bool cacheWriteFailed, String? error, String? pageError
 });
 
 
@@ -290,11 +292,12 @@ class __$FeedStateCopyWithImpl<$Res>
 
 /// Create a copy of FeedState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? articles = null,Object? query = null,Object? loading = null,Object? refreshing = null,Object? loadingMore = null,Object? hasMore = null,Object? offline = null,Object? cacheWriteFailed = null,Object? error = freezed,Object? pageError = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? articles = null,Object? query = null,Object? category = null,Object? loading = null,Object? refreshing = null,Object? loadingMore = null,Object? hasMore = null,Object? offline = null,Object? cacheWriteFailed = null,Object? error = freezed,Object? pageError = freezed,}) {
   return _then(_FeedState(
 articles: null == articles ? _self._articles : articles // ignore: cast_nullable_to_non_nullable
 as List<Article>,query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
-as String,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
+as String,category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
+as NewsCategory,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
 as bool,refreshing: null == refreshing ? _self.refreshing : refreshing // ignore: cast_nullable_to_non_nullable
 as bool,loadingMore: null == loadingMore ? _self.loadingMore : loadingMore // ignore: cast_nullable_to_non_nullable
 as bool,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable

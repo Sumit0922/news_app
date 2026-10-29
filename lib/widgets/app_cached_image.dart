@@ -3,9 +3,8 @@ import 'dart:typed_data';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
-import '../../core/constants/app_config.dart';
-import '../../core/constants/app_strings.dart';
-import '../../core/utils/app_responsive.dart';
+import '../core/constants/app_config.dart';
+import '../core/constants/app_strings.dart';
 import 'app_shimmer.dart';
 
 class AppCachedImage extends StatelessWidget {
@@ -26,11 +25,19 @@ class AppCachedImage extends StatelessWidget {
   final BoxFit fit;
   final String semanticLabel;
 
+  bool _validUrl(String value) {
+    final uri = Uri.tryParse(value);
+
+    return uri != null &&
+        uri.host.isNotEmpty &&
+        ['http', 'https'].contains(uri.scheme);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
-
-    final background = Theme.of(context).colorScheme.surfaceContainerHighest;
+    final colors = Theme.of(context).colorScheme;
+    final value = url?.trim() ?? '';
+    final localBytes = bytes;
 
     return Semantics(
       image: true,
@@ -38,90 +45,57 @@ class AppCachedImage extends StatelessWidget {
       excludeSemantics: true,
       child: RepaintBoundary(
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(
-            AppResponsive.radius(borderRadius),
-          ),
+          borderRadius: BorderRadius.circular(borderRadius),
           child: AspectRatio(
             aspectRatio: aspectRatio,
             child: ColoredBox(
-              color: background,
+              color: colors.surfaceContainerHighest,
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final value = url?.trim() ?? '';
-                  final localBytes = bytes;
-
-                  final hasLocal = localBytes != null && localBytes.isNotEmpty;
-
-                  final uri = Uri.tryParse(value);
-
-                  final validUrl =
-                      uri != null &&
-                      uri.host.isNotEmpty &&
-                      ['https', 'http'].contains(uri.scheme);
-
-                  if (!hasLocal && !validUrl) {
-                    return const _ImageFallback();
-                  }
-
-                  final ImageProvider<Object> provider = hasLocal
-                      ? MemoryImage(localBytes!)
-                      : CachedNetworkImageProvider(value);
-
-                  // Preserve the widget identity during ordinary rebuilds.
-                  final sourceKey = value.isNotEmpty ? value : localBytes;
-
-                  final width = constraints.maxWidth.isFinite
+                  final logicalWidth = constraints.maxWidth.isFinite
                       ? constraints.maxWidth
                       : 600.0;
 
-                  final decodeWidth =
-                      (width * MediaQuery.devicePixelRatioOf(context))
-                          .round()
-                          .clamp(64, 1600)
-                          .toInt();
+                  final decodeWidth = (
+                      logicalWidth *
+                          MediaQuery.devicePixelRatioOf(context)
+                  ).round().clamp(64, 1600).toInt();
 
-                  return Image(
-                    key: ValueKey(sourceKey),
-                    image: ResizeImage.resizeIfNeeded(
-                      decodeWidth,
-                      null,
-                      provider,
-                    ),
-                    fit: fit,
-                    filterQuality: FilterQuality.medium,
-                    frameBuilder: (context, child, frame, synchronouslyLoaded) {
-                      if (frame == null && !synchronouslyLoaded) {
+                  if (localBytes != null && localBytes.isNotEmpty) {
+                    return Image.memory(
+                      localBytes,
+                      fit: fit,
+                      width: double.infinity,
+                      height: double.infinity,
+                      cacheWidth: decodeWidth,
+                      gaplessPlayback: true,
+                      filterQuality: FilterQuality.medium,
+                      frameBuilder: (
+                          context,
+                          child,
+                          frame,
+                          synchronouslyLoaded,
+                          ) {
+                        if (synchronouslyLoaded || frame != null) {
+                          return child;
+                        }
+
                         return const AppShimmer();
-                      }
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return _networkImage(
+                          context,
+                          value,
+                          decodeWidth,
+                        );
+                      },
+                    );
+                  }
 
-                      if (reduceMotion) {
-                        return child;
-                      }
-
-                      return TweenAnimationBuilder<double>(
-                        tween: Tween<double>(begin: 0, end: 1),
-                        duration: AppDurations.imageFade,
-                        curve: Curves.easeOutCubic,
-                        child: child,
-                        builder: (context, opacity, image) {
-                          return Stack(
-                            fit: StackFit.expand,
-                            children: [
-                              // Remove the shimmer after the fade finishes.
-                              if (opacity < 1)
-                                Opacity(
-                                  opacity: 1 - opacity,
-                                  child: const AppShimmer(),
-                                ),
-                              Opacity(opacity: opacity, child: image),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                    errorBuilder: (_, _, _) {
-                      return const _ImageFallback();
-                    },
+                  return _networkImage(
+                    context,
+                    value,
+                    decodeWidth,
                   );
                 },
               ),
@@ -129,6 +103,40 @@ class AppCachedImage extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _networkImage(
+      BuildContext context,
+      String value,
+      int decodeWidth,
+      ) {
+    if (!_validUrl(value)) {
+      return const _ImageFallback();
+    }
+
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+
+    return CachedNetworkImage(
+      key: ValueKey(value),
+      imageUrl: value,
+      cacheKey: value,
+      width: double.infinity,
+      height: double.infinity,
+      fit: fit,
+      memCacheWidth: decodeWidth,
+      filterQuality: FilterQuality.medium,
+      useOldImageOnUrlChange: false,
+      placeholderFadeInDuration: Duration.zero,
+      fadeOutDuration: Duration.zero,
+      fadeInDuration: reduceMotion
+          ? Duration.zero
+          : AppDurations.imageFade,
+      fadeInCurve: Curves.easeOutCubic,
+      placeholder: (context, url) => const AppShimmer(),
+      errorWidget: (context, url, error) {
+        return const _ImageFallback();
+      },
     );
   }
 }
@@ -140,13 +148,30 @@ class _ImageFallback extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return ColoredBox(
-      color: colors.surfaceContainerHighest,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            colors.surfaceContainerHighest,
+            colors.surfaceContainerLow,
+          ],
+        ),
+      ),
       child: Center(
-        child: Icon(
-          Icons.image_not_supported_outlined,
-          size: AppResponsive.icon(30),
-          color: colors.onSurfaceVariant,
+        child: Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            color: colors.surface.withValues(alpha: 0.65),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Icon(
+            Icons.image_outlined,
+            size: 26,
+            color: colors.onSurfaceVariant,
+          ),
         ),
       ),
     );

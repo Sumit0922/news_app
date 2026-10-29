@@ -1,80 +1,105 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:orbit_news/widgets/app_text.dart';
-import 'package:orbit_news/widgets/glass_bottom_nav.dart';
-import '../core/constants/app_strings.dart';
-import '../core/constants/app_tokens.dart';
-import '../core/utils/app_responsive.dart';
 
+import '../core/constants/app_strings.dart';
+import '../widgets/glass_bottom_nav.dart';
 
 class AppShell extends StatelessWidget {
-  const AppShell({super.key, required this.navigationShell});
+  const AppShell({
+    super.key,
+    required this.navigationShell,
+  });
 
   final StatefulNavigationShell navigationShell;
 
   void _select(int index) {
     FocusManager.instance.primaryFocus?.unfocus();
 
-    navigationShell.goBranch(index, initialLocation: false);
+    if (index == navigationShell.currentIndex) return;
+
+    navigationShell.goBranch(
+      index,
+      initialLocation: false,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
-
-    final wide = MediaQuery.sizeOf(context).width >= AppSpacing.compactWidth;
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final keyboardOpen =
+        MediaQuery.viewInsetsOf(context).bottom > 0;
 
     return Scaffold(
       extendBody: true,
       appBar: AppBar(
-        toolbarHeight: AppResponsive.space(48),
+        toolbarHeight: 58,
+        titleSpacing: 20,
+        backgroundColor: colors.surface,
+        surfaceTintColor: Colors.transparent,
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.auto_awesome_rounded, size: AppResponsive.icon(24)),
-            SizedBox(width: AppResponsive.space(AppSpacing.sm)),
-            const AppText(AppStrings.appName, variant: AppTextStyle.title),
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: colors.primaryContainer,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: colors.primary.withValues(alpha: 0.1),
+                ),
+              ),
+              child: Icon(
+                Icons.auto_awesome_rounded,
+                size: 19,
+                color: colors.primary,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              AppStrings.appName,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.8,
+              ),
+            ),
           ],
         ),
         actions: [
-          if (wide)
-            const Padding(
-              padding: EdgeInsets.only(right: AppSpacing.lg),
+          if (MediaQuery.sizeOf(context).width >= 700)
+            Padding(
+              padding: const EdgeInsets.only(right: 24),
               child: Center(
-                child: AppText(
+                child: Text(
                   AppStrings.tagline,
-                  variant: AppTextStyle.caption,
+                  style: theme.textTheme.labelSmall,
                 ),
               ),
             ),
         ],
       ),
-      body: SafeArea(bottom: false, child: navigationShell),
+      body: SafeArea(
+        bottom: false,
+        child: navigationShell,
+      ),
       bottomNavigationBar: keyboardOpen
           ? null
-          : Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: SafeArea(
-                top: false,
-                minimum: EdgeInsets.fromLTRB(
-                  AppResponsive.space(20),
-                  0,
-                  AppResponsive.space(20),
-                  6,
-                ),
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  heightFactor: 1,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 480),
-                    child: GlassBottomNav(
-                      selectedIndex: navigationShell.currentIndex,
-                      onSelected: _select,
-                    ),
-                  ),
-                ),
-              ),
+          : SafeArea(
+        top: false,
+        minimum: const EdgeInsets.fromLTRB(20, 8, 20, 10),
+        child: Align(
+          heightFactor: 1,
+          alignment: Alignment.bottomCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: GlassBottomNav(
+              selectedIndex: navigationShell.currentIndex,
+              onSelected: _select,
             ),
+          ),
+        ),
+      ),
     );
   }
 }
