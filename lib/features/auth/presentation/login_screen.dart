@@ -46,9 +46,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    if (context.reduceMotion || !TickerMode.of(context)) {
+    if (context.reduceMotion || !TickerMode.valuesOf(context).enabled) {
       _animation.stop();
-    } else if (!_animation.isAnimating) {
+    }else if (!_animation.isAnimating) {
       _animation.repeat();
     }
   }
@@ -59,11 +59,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
     FocusManager.instance.primaryFocus?.unfocus();
 
-    ref.read(authProvider.notifier).signIn(
-      _email.text.trim(),
-      _password.text,
-      remember: _remember,
-    );
+    ref
+        .read(authProvider.notifier)
+        .signIn(_email.text.trim(), _password.text, remember: _remember);
   }
 
   @override
@@ -91,9 +89,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             Positioned.fill(
               child: IgnorePointer(
                 child: ExcludeSemantics(
-                  child: _GalaxyBackground(
-                    animation: _animation,
-                  ),
+                  child: _GalaxyBackground(animation: _animation),
                 ),
               ),
             ),
@@ -105,7 +101,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
                   return SingleChildScrollView(
                     keyboardDismissBehavior:
-                    ScrollViewKeyboardDismissBehavior.onDrag,
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     padding: EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: verticalPadding,
@@ -119,19 +115,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       ),
                       child: Center(
                         child: ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            maxWidth: 440,
-                          ),
+                          constraints: const BoxConstraints(maxWidth: 440),
                           child: FadeIn(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment:
-                              CrossAxisAlignment.stretch,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 _buildBrand(context),
-                                SizedBox(
-                                  height: compact ? 22 : 30,
-                                ),
+                                SizedBox(height: compact ? 22 : 30),
                                 _buildFormCard(context, auth),
                                 const SizedBox(height: 16),
                                 Padding(
@@ -175,9 +166,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           decoration: BoxDecoration(
             color: colors.primary,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: colors.onPrimary.withValues(alpha: 0.12),
-            ),
+            border: Border.all(color: colors.onPrimary.withValues(alpha: 0.12)),
           ),
           child: Icon(
             Icons.auto_awesome_rounded,
@@ -198,10 +187,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 ),
               ),
               const SizedBox(height: 2),
-              Text(
-                AppStrings.tagline,
-                style: theme.textTheme.labelSmall,
-              ),
+              Text(AppStrings.tagline, style: theme.textTheme.labelSmall),
             ],
           ),
         ),
@@ -217,20 +203,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: colors.surface.withValues(
-          alpha: dark ? 0.92 : 0.94,
-        ),
+        color: colors.surface.withValues(alpha: dark ? 0.92 : 0.94),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: colors.primary.withValues(
-            alpha: dark ? 0.25 : 0.16,
-          ),
+          color: colors.primary.withValues(alpha: dark ? 0.25 : 0.16),
         ),
         boxShadow: [
           BoxShadow(
-            color: colors.shadow.withValues(
-              alpha: dark ? 0.12 : 0.04,
-            ),
+            color: colors.shadow.withValues(alpha: dark ? 0.12 : 0.04),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),
@@ -262,9 +242,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               const SizedBox(height: 9),
               Text(
                 AppStrings.loginSubtitle,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  height: 1.6,
-                ),
+                style: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
               ),
               const SizedBox(height: 20),
               Divider(
@@ -319,31 +297,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 onTapOutside: (_) {
                   _passwordFocus.unfocus();
                 },
-                decoration: _inputDecoration(
-                  context,
-                  hint: AppStrings.passwordHint,
-                  icon: Icons.lock_outline_rounded,
-                ).copyWith(
-                  counterText: '',
-                  suffixIcon: IconButton(
-                    tooltip: _obscure
-                        ? AppStrings.showPassword
-                        : AppStrings.hidePassword,
-                    onPressed: auth.busy
-                        ? null
-                        : () {
-                      setState(() {
-                        _obscure = !_obscure;
-                      });
-                    },
-                    icon: Icon(
-                      _obscure
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                      size: 19,
+                decoration:
+                    _inputDecoration(
+                      context,
+                      hint: AppStrings.passwordHint,
+                      icon: Icons.lock_outline_rounded,
+                    ).copyWith(
+                      counterText: '',
+                      suffixIcon: IconButton(
+                        tooltip: _obscure
+                            ? AppStrings.showPassword
+                            : AppStrings.hidePassword,
+                        onPressed: auth.busy
+                            ? null
+                            : () {
+                                setState(() {
+                                  _obscure = !_obscure;
+                                });
+                              },
+                        icon: Icon(
+                          _obscure
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          size: 19,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
               ),
               const SizedBox(height: 5),
 
@@ -362,10 +341,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 onChanged: auth.busy
                     ? null
                     : (value) {
-                  setState(() {
-                    _remember = value ?? false;
-                  });
-                },
+                        setState(() {
+                          _remember = value ?? false;
+                        });
+                      },
               ),
 
               AnimatedSize(
@@ -376,47 +355,41 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 child: auth.error == null
                     ? const SizedBox(width: double.infinity)
                     : Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Semantics(
-                    liveRegion: true,
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: colors.error.withValues(
-                          alpha: 0.06,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: colors.error.withValues(
-                            alpha: 0.16,
-                          ),
-                        ),
-                      ),
-                      child: Row(
-                        crossAxisAlignment:
-                        CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.info_outline_rounded,
-                            size: 16,
-                            color: colors.error,
-                          ),
-                          const SizedBox(width: 7),
-                          Expanded(
-                            child: Text(
-                              auth.error!,
-                              style:
-                              theme.textTheme.bodySmall?.copyWith(
-                                color: colors.error,
-                                height: 1.5,
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Semantics(
+                          liveRegion: true,
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: colors.error.withValues(alpha: 0.06),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: colors.error.withValues(alpha: 0.16),
                               ),
                             ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  Icons.info_outline_rounded,
+                                  size: 16,
+                                  color: colors.error,
+                                ),
+                                const SizedBox(width: 7),
+                                Expanded(
+                                  child: Text(
+                                    auth.error!,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: colors.error,
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                ),
               ),
 
               const SizedBox(height: 6),
@@ -436,17 +409,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   Widget _fieldLabel(BuildContext context, String text) {
     return Text(
       text,
-      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-        fontWeight: FontWeight.w600,
-      ),
+      style: Theme.of(context).textTheme.labelLarge
+          ?.copyWith(fontWeight: FontWeight.w600),
     );
   }
 
   InputDecoration _inputDecoration(
-      BuildContext context, {
-        required String hint,
-        required IconData icon,
-      }) {
+    BuildContext context, {
+    required String hint,
+    required IconData icon,
+  }) {
     final colors = Theme.of(context).colorScheme;
 
     final border = OutlineInputBorder(
@@ -458,17 +430,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
     return InputDecoration(
       hintText: hint,
-      prefixIcon: Icon(
-        icon,
-        size: 18,
-        color: colors.onSurfaceVariant,
-      ),
+      prefixIcon: Icon(icon, size: 18, color: colors.onSurfaceVariant),
       filled: true,
       fillColor: colors.surfaceContainerLow,
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 14,
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       border: border,
       enabledBorder: border,
       disabledBorder: border.copyWith(
@@ -477,28 +442,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         ),
       ),
       focusedBorder: border.copyWith(
-        borderSide: BorderSide(
-          color: colors.primary,
-          width: 1.3,
-        ),
+        borderSide: BorderSide(color: colors.primary, width: 1.3),
       ),
-      errorBorder: border.copyWith(
-        borderSide: BorderSide(color: colors.error),
-      ),
+      errorBorder: border.copyWith(borderSide: BorderSide(color: colors.error)),
       focusedErrorBorder: border.copyWith(
-        borderSide: BorderSide(
-          color: colors.error,
-          width: 1.3,
-        ),
+        borderSide: BorderSide(color: colors.error, width: 1.3),
       ),
     );
   }
 }
 
 class _GalaxyBackground extends StatelessWidget {
-  const _GalaxyBackground({
-    required this.animation,
-  });
+  const _GalaxyBackground({required this.animation});
 
   final Animation<double> animation;
 
@@ -518,25 +473,21 @@ class _GalaxyBackground extends StatelessWidget {
                 end: Alignment.bottomRight,
                 colors: dark
                     ? [
-                  const Color(0xFF090D1C),
-                  colors.surface,
-                  const Color(0xFF151027),
-                ]
+                        const Color(0xFF090D1C),
+                        colors.surface,
+                        const Color(0xFF151027),
+                      ]
                     : [
-                  Color.alphaBlend(
-                    const Color(0xFF818CF8).withValues(
-                      alpha: 0.08,
-                    ),
-                    colors.surface,
-                  ),
-                  colors.surface,
-                  Color.alphaBlend(
-                    const Color(0xFFA78BFA).withValues(
-                      alpha: 0.08,
-                    ),
-                    colors.surface,
-                  ),
-                ],
+                        Color.alphaBlend(
+                          const Color(0xFF818CF8).withValues(alpha: 0.08),
+                          colors.surface,
+                        ),
+                        colors.surface,
+                        Color.alphaBlend(
+                          const Color(0xFFA78BFA).withValues(alpha: 0.08),
+                          colors.surface,
+                        ),
+                      ],
               ),
             ),
           ),
@@ -574,9 +525,7 @@ class _GalaxyBackground extends StatelessWidget {
                 starColor: dark
                     ? const Color(0xFFE0E7FF)
                     : const Color(0xFF6366A0),
-                orbitColor: dark
-                    ? const Color(0xFFA5B4FC)
-                    : colors.primary,
+                orbitColor: dark ? const Color(0xFFA5B4FC) : colors.primary,
                 dark: dark,
               ),
             ),
@@ -632,18 +581,11 @@ class _GalaxyPainter extends CustomPainter {
   final Color orbitColor;
   final bool dark;
 
-  static final List<Offset> _stars = List.generate(
-    100,
-        (index) {
-      final random = math.Random(index * 97 + 11);
+  static final List<Offset> _stars = List.generate(100, (index) {
+    final random = math.Random(index * 97 + 11);
 
-      return Offset(
-        random.nextDouble(),
-        random.nextDouble(),
-      );
-    },
-    growable: false,
-  );
+    return Offset(random.nextDouble(), random.nextDouble());
+  }, growable: false);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -660,22 +602,17 @@ class _GalaxyPainter extends CustomPainter {
 
       final position = Offset(
         star.dx * size.width,
-        star.dy * size.height +
-            math.sin(phase + index * 0.7) * 2,
+        star.dy * size.height + math.sin(phase + index * 0.7) * 2,
       );
 
-      final twinkle =
-          0.5 + 0.5 * math.sin(phase * 2 + index * 1.7);
+      final twinkle = 0.5 + 0.5 * math.sin(phase * 2 + index * 1.7);
 
-      final behindForm = star.dx > 0.12 &&
-          star.dx < 0.88 &&
-          star.dy > 0.22 &&
-          star.dy < 0.80;
+      final behindForm =
+          star.dx > 0.12 && star.dx < 0.88 && star.dy > 0.22 && star.dy < 0.80;
 
       final visibility = behindForm ? 0.18 : 1.0;
 
-      final opacity = (dark ? 0.20 : 0.12) +
-          twinkle * (dark ? 0.50 : 0.25);
+      final opacity = (dark ? 0.20 : 0.12) + twinkle * (dark ? 0.50 : 0.25);
 
       final radius = index % 9 == 0
           ? 1.7
@@ -685,28 +622,18 @@ class _GalaxyPainter extends CustomPainter {
 
       paint
         ..style = PaintingStyle.fill
-        ..color = starColor.withValues(
-          alpha: opacity * visibility,
-        );
+        ..color = starColor.withValues(alpha: opacity * visibility);
 
       canvas.drawCircle(position, radius, paint);
 
       if (index % 13 == 0 && !behindForm) {
-        _drawSparkle(
-          canvas,
-          position,
-          radius * 3,
-          opacity * 0.6,
-        );
+        _drawSparkle(canvas, position, radius * 3, opacity * 0.6);
       }
     }
 
     _drawOrbit(
       canvas,
-      center: Offset(
-        size.width * 0.90,
-        size.height * 0.10,
-      ),
+      center: Offset(size.width * 0.90, size.height * 0.10),
       radiusX: size.width * 0.36,
       radiusY: size.width * 0.14,
       rotation: -0.45,
@@ -715,10 +642,7 @@ class _GalaxyPainter extends CustomPainter {
 
     _drawOrbit(
       canvas,
-      center: Offset(
-        size.width * 0.08,
-        size.height * 0.93,
-      ),
+      center: Offset(size.width * 0.08, size.height * 0.93),
       radiusX: size.width * 0.40,
       radiusY: size.width * 0.16,
       rotation: -0.40,
@@ -729,11 +653,11 @@ class _GalaxyPainter extends CustomPainter {
   }
 
   void _drawSparkle(
-      Canvas canvas,
-      Offset center,
-      double radius,
-      double opacity,
-      ) {
+    Canvas canvas,
+    Offset center,
+    double radius,
+    double opacity,
+  ) {
     final paint = Paint()
       ..color = starColor.withValues(alpha: opacity)
       ..strokeWidth = 0.8
@@ -753,13 +677,13 @@ class _GalaxyPainter extends CustomPainter {
   }
 
   void _drawOrbit(
-      Canvas canvas, {
-        required Offset center,
-        required double radiusX,
-        required double radiusY,
-        required double rotation,
-        required double phase,
-      }) {
+    Canvas canvas, {
+    required Offset center,
+    required double radiusX,
+    required double radiusY,
+    required double rotation,
+    required double phase,
+  }) {
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.rotate(rotation);
@@ -773,9 +697,7 @@ class _GalaxyPainter extends CustomPainter {
     canvas.drawOval(
       orbit,
       Paint()
-        ..color = orbitColor.withValues(
-          alpha: dark ? 0.14 : 0.09,
-        )
+        ..color = orbitColor.withValues(alpha: dark ? 0.14 : 0.09)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 0.8,
     );
@@ -786,18 +708,13 @@ class _GalaxyPainter extends CustomPainter {
       0.55,
       false,
       Paint()
-        ..color = orbitColor.withValues(
-          alpha: dark ? 0.35 : 0.20,
-        )
+        ..color = orbitColor.withValues(alpha: dark ? 0.35 : 0.20)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.2
         ..strokeCap = StrokeCap.round,
     );
 
-    final planet = Offset(
-      math.cos(phase) * radiusX,
-      math.sin(phase) * radiusY,
-    );
+    final planet = Offset(math.cos(phase) * radiusX, math.sin(phase) * radiusY);
 
     canvas.drawCircle(
       planet,
@@ -805,26 +722,16 @@ class _GalaxyPainter extends CustomPainter {
       Paint()
         ..shader = RadialGradient(
           colors: [
-            orbitColor.withValues(
-              alpha: dark ? 0.35 : 0.20,
-            ),
+            orbitColor.withValues(alpha: dark ? 0.35 : 0.20),
             orbitColor.withValues(alpha: 0),
           ],
-        ).createShader(
-          Rect.fromCircle(
-            center: planet,
-            radius: 9,
-          ),
-        ),
+        ).createShader(Rect.fromCircle(center: planet, radius: 9)),
     );
 
     canvas.drawCircle(
       planet,
       2.5,
-      Paint()
-        ..color = orbitColor.withValues(
-          alpha: dark ? 0.9 : 0.65,
-        ),
+      Paint()..color = orbitColor.withValues(alpha: dark ? 0.9 : 0.65),
     );
 
     canvas.restore();

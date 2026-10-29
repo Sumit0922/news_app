@@ -87,7 +87,7 @@ class _BookmarksScreenState extends ConsumerState<BookmarksScreen> {
 
     return SizeTransition(
       sizeFactor: curved,
-      axisAlignment: -1,
+      alignment: Alignment.topCenter,
       child: FadeTransition(
         opacity: curved,
         child: Padding(

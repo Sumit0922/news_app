@@ -35,10 +35,11 @@ class BookmarkButton extends ConsumerWidget {
                 final nowSaved = await ref
                     .read(bookmarkProvider.notifier)
                     .toggle(article);
-                if (context.mounted)
+                if (context.mounted) {
                   context.showMessage(
                     nowSaved ? AppStrings.saved : AppStrings.removed,
                   );
+                }
               } catch (error) {
                 if (context.mounted) context.showMessage(failureMessage(error));
               }
